@@ -199,6 +199,7 @@ class Graph:
         x: str,
         y: str,
         color: str = "Sample",
+        
         color_discrete_map: dict = None,
         markers: bool = True,
         hover_data: list = None,
@@ -233,6 +234,13 @@ class Graph:
                 "LOW_uptake": "blue",
                 "HIGH_uptake": "red",
             }
+
+        if hover_data is None:
+            hover_data = [
+                "Texture A Selected - Region Area [µm²] - Sum per Well", 
+                "Timepoint"
+            ]
+
         if y_axis_ratios:
             ratios_list = []
             for group in df_grouped[color].unique():
