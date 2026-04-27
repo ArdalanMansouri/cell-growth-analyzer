@@ -164,8 +164,8 @@ class Graph:
             "ticks": "outside",
             "title_text": "Hours",
             "range": (0, 100),
-            "tickfont_size": 20,
-            "title_font_size": 20,
+            "tickfont": dict(family="Arial", size=20),
+            "title_font": dict(family="Arial", size=20),
         }
         self.yaxis_params = {
             "showline": True,
@@ -174,12 +174,13 @@ class Graph:
             "mirror": True,
             "ticks": "outside",
             "title_text": "",
-            "tickfont_size": 20,
-            "title_font_size": 20,
+            "tickfont": dict(family="Arial", size=20),
+            "title_font": dict(family="Arial", size=20),
         }
         self.layout_params = {
             "plot_bgcolor": "white",
-            "title": dict(text="", font_size=28, x=0.5),
+            "title": dict(text="", x=0.5),
+            "font": dict(family="Arial", size=14, color="black"),
         }
         # Positional and display settings for the toggle button
         self.toggle_params = {
@@ -197,13 +198,14 @@ class Graph:
         df_grouped: pd.DataFrame,
         x: str,
         y: str,
-        color: str,
-        color_discrete_map: dict,
+        color: str = "Sample",
+        color_discrete_map: dict = None,
         markers: bool = True,
         hover_data: list = None,
         error_y: str = None,
         width: int = 1200,
         height: int = 600,
+        y_axis_ratios: bool = False,
     ):
         """Create a line graph and apply the stored axis and layout parameters.
 
@@ -218,10 +220,35 @@ class Graph:
             error_y: Column name to use as the y-axis error bar.
             width: Figure width in pixels. Default 1200.
             height: Figure height in pixels. Default 600.
+            y_axis_ratios: If True, normalise y values as ratios relative to 
+                each group's first timepoint value. Default False.
 
         Returns:
             plotly.graph_objects.Figure
         """
+        if color_discrete_map is None:
+            color_discrete_map = {
+                "Neg Control": "black",
+                "Parental": "green",
+                "LOW_uptake": "blue",
+                "HIGH_uptake": "red",
+            }
+        if y_axis_ratios:
+            ratios_list = []
+            for group in df_grouped[color].unique():
+                data = df_grouped.loc[df_grouped[color] == group]
+                data = data.reset_index()
+                series = data[y]
+                ratios = [
+                    series[i] / series[0] 
+                    for i, _ in enumerate(series) if i > 0
+                ]
+                ratios.insert(0, 1)
+                data["Ratios"] = ratios
+                ratios_list.append(data)
+            df_grouped = pd.concat(ratios_list)
+            y = "Ratios"
+
         # Use the exact hours from the original dataframe as x-axis tick marks
         self.xaxis_params["tickvals"] = df_grouped[x].to_numpy()
 
